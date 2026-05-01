@@ -1,0 +1,15 @@
+.load-more-btn {
+  display: block;
+  margin: 34px auto;
+  border-radius: 8px;
+  padding: 8px 16px;
+  background: #4e75ff;
+  color: #fff;
+  outline: none;
+  border: none;
+  width: 125px;
+  height: 40px;
+}
+.load-more-btn.is-hidden {
+  display: none;
+}
