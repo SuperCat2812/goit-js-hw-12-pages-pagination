@@ -3,9 +3,10 @@ import { getImage } from './js/pixabay-api';
 import {
   ImagesRender,
   offLouder,
+  hideLoadMoreBtn,
   onImagesRenderClear,
-  onImagesRenderLarge,
   onLouder,
+  showLoadMoreBtn,
 } from './js/render-functions';
 
 export const refs = {
@@ -13,7 +14,7 @@ export const refs = {
   input: document.querySelector('input[name="search-text"]'),
   gallery: document.querySelector('.gallery'),
   loader: document.querySelector('.loader'),
-  loaderMore: document.querySelector('.load-more-btn '),
+  loadMoreBtn: document.querySelector('.load-more-btn'),
 };
 
 let page = 1;
@@ -21,21 +22,23 @@ let ipPages = 15;
 let name = '';
 
 refs.form.addEventListener('submit', onSearchFormImages);
-refs.loaderMore.addEventListener('click', onLoaderMore);
+refs.loadMoreBtn.addEventListener('click', onLoaderMore);
 
 async function onSearchFormImages(e) {
   e.preventDefault();
-  refs.loaderMore.classList.add('is-hidden');
   name = refs.input.value.trim();
   if (!name) {
     iziToast.error({ message: 'input empty', position: 'topRight' });
     return;
   }
+  page = 1;
+  hideLoadMoreBtn();
   onLouder();
   onImagesRenderClear();
   try {
     const { total, totalHits, hits } = await getImage(name, page, ipPages);
     if (total === 0) {
+      hideLoadMoreBtn();
       iziToast.error({
         message: 'Sorry, there are no images matching your search query. Please try again!',
         position: 'topRight',
@@ -43,21 +46,22 @@ async function onSearchFormImages(e) {
 
       return;
     }
-    if (totalHits / ipPages > 1) {
-      refs.loaderMore.classList.remove('is-hidden');
-    }
-    if (totalHits / ipPages <= page) {
-      refs.loaderMore.classList.add('is-hidden');
-      refs.loaderMore.removeEventListener('click', onLoaderMore);
+    const totalPages = Math.ceil(totalHits / ipPages);
+
+    if (page < totalPages) {
+      showLoadMoreBtn();
+    } else {
+      hideLoadMoreBtn();
       iziToast.info({
         message: `We're sorry, but you've reached the end of search results.`,
         position: 'topRight',
       });
     }
+
     const imagesCart = hits;
 
     ImagesRender(imagesCart);
-    onImagesRenderLarge();
+
     refs.form.reset();
   } catch (error) {
     iziToast.error({
@@ -70,16 +74,18 @@ async function onSearchFormImages(e) {
 }
 async function onLoaderMore() {
   page++;
-
+  onLouder();
   try {
+    hideLoadMoreBtn();
     const { totalHits, hits } = await getImage(name, page, ipPages);
 
-    if (totalHits > 1) {
-      refs.loaderMore.classList.remove('is-hidden');
-    }
-    if (totalHits / ipPages <= page) {
-      refs.loaderMore.classList.add('is-hidden');
-      refs.loaderMore.removeEventListener('click', onLoaderMore);
+    const totalPages = Math.ceil(totalHits / ipPages);
+
+    if (page < totalPages) {
+      showLoadMoreBtn();
+    } else {
+      hideLoadMoreBtn();
+
       iziToast.info({
         message: `We're sorry, but you've reached the end of search results.`,
         position: 'topRight',
@@ -87,7 +93,7 @@ async function onLoaderMore() {
     }
 
     ImagesRender(hits);
-    onImagesRenderLarge();
+
     const elementHeight = refs.gallery.children[0].getBoundingClientRect().height;
     scrollBy({
       top: elementHeight * 2,

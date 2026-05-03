@@ -9,7 +9,7 @@
 .gallery-item {
   width: calc((100% - 24px) / 4);
   border: 1px solid #808080;
-  height: 283px;
+  height: max-content;
 }
 .gallery-item > img {
   object-fit: cover;
